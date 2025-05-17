@@ -20,6 +20,7 @@ def custom_gaussian_blur(img, kernel_size=5, sigma=1):
     blurred = np.zeros_like(img)
     for c in range(3):  # BGR
         blurred[:, :, c] = cv2.filter2D(img[:, :, c], -1, kernel)
+    print(blurred)
     return blurred
 
 def apply_circular_blur_feathered(original_face, blurred_face, feather):
@@ -28,14 +29,14 @@ def apply_circular_blur_feathered(original_face, blurred_face, feather):
     center = (w // 2, h // 2)
     radius = int(min(w, h) * 0.5) 
 
-    # สร้าง mask สีขาวเป็นวงกลมในพื้นดำ
+    # Create White Mask to be circle in black area
     mask = np.zeros((h, w), dtype=np.uint8)
     cv2.circle(mask, center, radius, 255, -1)
 
-    # Feather: ทำให้ขอบวงกลมเบลอด้วย GaussianBlur
+    # Making Feather edge blur with GaussianBlur
     mask = cv2.GaussianBlur(mask, (feather*2+1, feather*2+1), 0)
 
-    # แปลง mask เป็น 3 channels
+    # Convert Maske to be 3 channels
     mask = mask.astype(np.float32) / 255.0
     mask_3ch = cv2.merge([mask, mask, mask])
 
@@ -88,7 +89,7 @@ with mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.8) as f
                 face_roi = frame[y:y_end, x:x_end].copy()
 
                 # Step 2: Apply custom Gaussian blur
-                blurred_face = custom_gaussian_blur(face_roi, kernel_size=51, sigma=20)
+                blurred_face = custom_gaussian_blur(face_roi, kernel_size=51, sigma=10)
 
                 # Step 3: Paste blurred face back to frame
                 # frame[y:y_end, x:x_end] = blurred_face
