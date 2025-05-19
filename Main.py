@@ -55,6 +55,7 @@ with mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.8) as f
             break
 
         # Convert to RGB
+        # BGR → RGB (For MediaPipe)
         img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Contain object detection
@@ -85,7 +86,6 @@ with mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.8) as f
                 # Step 1: Extract face region (ROI)
                 # ROI --> Region of Interest
                 # .copy() is for not adjust directly frame
-
                 face_roi = frame[y:y_end, x:x_end].copy()
 
                 # Step 2: Apply custom Gaussian blur
