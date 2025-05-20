@@ -3,24 +3,30 @@ import numpy as np
 import mediapipe as mp
 
 # Import video
-cap = cv2.VideoCapture('ex1.mp4')
+cap = cv2.VideoCapture('ex2.mp4')
+# cap = cv2.VideoCapture('ex3.mp4')
 mp_face = mp.solutions.face_detection
 
 # Define GaussianBlur Function
-def gaussian_kernel(size=5, sigma=1):
+def gaussian_kernel(size, sigma):
+
+    # Create Kernel
     ax = np.linspace(-(size // 2), size // 2, size)
     xx, yy = np.meshgrid(ax, ax)
+    print(xx,yy)
+    # Calculate weight from middle point
     kernel = np.exp(-(xx**2 + yy**2) / (2 * sigma**2))
+    # Split to all sum = 1
     kernel /= np.sum(kernel)
     # print(kernel)
     return kernel
 
-def custom_gaussian_blur(img, kernel_size=5, sigma=1):
+def custom_gaussian_blur(img, kernel_size, sigma):
     kernel = gaussian_kernel(kernel_size, sigma).astype(np.float32)
     blurred = np.zeros_like(img)
     for c in range(3):  # BGR
         blurred[:, :, c] = cv2.filter2D(img[:, :, c], -1, kernel)
-    print(blurred)
+    # print(blurred)
     return blurred
 
 def apply_circular_blur_feathered(original_face, blurred_face, feather):
@@ -36,7 +42,7 @@ def apply_circular_blur_feathered(original_face, blurred_face, feather):
     # Making Feather edge blur with GaussianBlur
     mask = cv2.GaussianBlur(mask, (feather*2+1, feather*2+1), 0)
 
-    # Convert Maske to be 3 channels
+    # Convert Maske to be 3 channels B G R
     mask = mask.astype(np.float32) / 255.0
     mask_3ch = cv2.merge([mask, mask, mask])
 
@@ -48,8 +54,12 @@ def apply_circular_blur_feathered(original_face, blurred_face, feather):
 
 
 # Start detecting
-with mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.8) as face_detector:
+with mp_face.FaceDetection(model_selection=0, min_detection_confidence=0.6) as face_detector:
+# with mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.6) as face_detector: ex2
+   
     while cap.isOpened():
+
+        # ret = return
         ret, frame = cap.read()
         if not ret:
             break
@@ -89,11 +99,12 @@ with mp_face.FaceDetection(model_selection=1, min_detection_confidence=0.8) as f
                 face_roi = frame[y:y_end, x:x_end].copy()
 
                 # Step 2: Apply custom Gaussian blur
-                blurred_face = custom_gaussian_blur(face_roi, kernel_size=51, sigma=10)
+                # Kernel Size = Size of blur , sigma = blur value
+                blurred_face = custom_gaussian_blur(face_roi, kernel_size=51, sigma=20)
 
                 # Step 3: Paste blurred face back to frame
                 # frame[y:y_end, x:x_end] = blurred_face
-                circular_blurred_face = apply_circular_blur_feathered(face_roi, blurred_face,feather=15)
+                circular_blurred_face = apply_circular_blur_feathered(face_roi, blurred_face,feather=20)
                 frame[y:y_end, x:x_end] = circular_blurred_face
 
 
